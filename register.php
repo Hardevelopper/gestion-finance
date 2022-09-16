@@ -1,3 +1,95 @@
+<?php
+@include'config_db.php';
+
+
+if(isset($_POST['submit'])){
+
+    $username = $_POST['username'];
+    $username = filter_var($username, FILTER_SANITIZE_STRING);
+    $email = strtolower($_POST['email']);
+    $email = filter_var($email, FILTER_SANITIZE_EMAIL);
+    $pass = md5($_POST['pass']);
+    $pass = filter_var($pass, FILTER_SANITIZE_STRING);
+    $cpass = md5($_POST['cpass']);
+    $cpass = filter_var($cpass, FILTER_SANITIZE_STRING);
+
+    $image = $_FILES['image']['name'];
+    $image = filter_var($image, FILTER_SANITIZE_STRING);
+    $image_size = $_FILES['image']['size'];
+    $image_tmp_name = $_FILES['image']['tmp_name'];
+    $folder_uploaded_image = "uploaded_images/".$image;
+
+    $select = $conn->prepare("SELECT * FROM users WHERE username = ? || email = ? AND password = ?");
+    $select->execute([$username, $email, $cpass]);
+
+    if(!empty($username) && !empty($email) && !empty($cpass) && !empty($image)){
+
+        if($pass != $cpass){
+
+            $message[] = "Confirm password is not match!";
+        }else{
+
+            $rowCount = $select->rowCount();
+
+            if(!$rowCount > 0){
+                
+                $insert = $conn->prepare("INSERT INTO users(username, email, password, image) VALUES(?, ?, ?, ?)");
+                $insert->execute([$username, $email, $cpass, $image]);
+
+                if($insert == true){
+
+                if($image_size > 2000000){
+
+                    $message[] = "  Account creating successfully! \n 
+                                    image size is large, add it once connected
+                                ";
+
+                                header("Location: login.php");
+                }else{
+
+                    move_uploaded_file($image_tmp_name, $folder_uploaded_image);
+                    $message[] = "Account creating successfully!";
+
+                    header("Location: login.php");
+
+                }  
+                };
+
+            }else{
+                $message[] = "Account already existed !";
+            }
+        }
+
+    }else{
+        $message[] = "All imput are required !";
+    }
+
+}
+
+
+?>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -8,6 +100,7 @@
     <meta name="description" content="au theme template">
     <meta name="author" content="Hau Nguyen">
     <meta name="keywords" content="au theme template">
+    <link rel="shortcut icon" href="images/head.png">
 
     <!-- Title Page-->
     <title>Register</title>
@@ -42,12 +135,23 @@
                 <div class="login-wrap">
                     <div class="login-content">
                         <div class="login-logo">
-                            <a href="#">
-                                <img src="images/icon/logo.png" alt="CoolAdmin">
-                            </a>
+                            <h2>Gestion finance</h2>
                         </div>
+
+                        <?php
+                        
+                        if(isset($message)){
+
+                            foreach($message as $message){
+
+                                echo '<div class="message">'. $message .'</div>';
+                            }
+                        }
+                        
+                        ?>
+
                         <div class="login-form">
-                            <form action="" method="post">
+                            <form method="post" enctype="multipart/form-data">
                                 <div class="form-group">
                                     <label>Nom d'utilisateur</label>
                                     <input class="au-input au-input--full" type="text" name="username" placeholder="Nom d'utilisateur">
@@ -58,14 +162,17 @@
                                 </div>
                                 <div class="form-group">
                                     <label>Mot de passe</label>
-                                    <input class="au-input au-input--full" type="password" name="password" placeholder="Mot de passe">
+                                    <input class="au-input au-input--full" type="password" name="pass" placeholder="Mot de passe">
                                 </div>
-                                <div class="login-checkbox">
-                                    <label>
-                                        <input type="checkbox" name="aggree">Accepter les conditions d'utilisation 
-                                    </label>
+                                <div class="form-group">
+                                    <label>Confirmer mot de passe</label>
+                                    <input class="au-input au-input--full" type="password" name="cpass" placeholder="Confirm mot de passe">
                                 </div>
-                                <button class="au-btn au-btn--block au-btn--green m-b-20" type="submit">Enregistrer</button>
+                                <div class="form-group">
+                                    <label>Image</label>
+                                    <input class="au-input au-input--full" type="file" name="image">
+                                </div>
+                                <button class="au-btn au-btn--block au-btn--green m-b-20" type="submit" name="submit">Enregistrer</button>
                             </form>
                             <div class="register-link">
                                 <p>

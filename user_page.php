@@ -1,3 +1,39 @@
+<?php
+@include'config_db.php';
+session_start();
+
+$user_id = $_SESSION['id'];
+
+if(!isset($user_id)){
+
+    header("Location: login.php");
+}else{
+
+   $select = $conn->query("SELECT * FROM users WHERE id = $user_id");
+
+   $fetch_users = $select->fetch(PDO::FETCH_ASSOC);
+}
+
+
+?>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -8,6 +44,7 @@
     <meta name="description" content="au theme template">
     <meta name="author" content="Hau Nguyen">
     <meta name="keywords" content="au theme template">
+    <link rel="shortcut icon" href="images/head.png">
 
     <!-- Title Page-->
     <title>User page</title>
@@ -48,10 +85,10 @@
             <div class="menu-sidebar2__content js-scrollbar1">
                 <div class="account2">
                     <div class="image img-cir img-120">
-                        <img src="images/icon/avatar-02.jpg" alt="John Doe" />
+                        <img src="uploaded_images/<?= $fetch_users['image']; ?>" alt="profile image" />
                     </div>
-                    <h4 class="name">User</h4>
-                    <a href="#">Déconnexion</a>
+                    <h4 class="name"><?= $fetch_users['username']; ?></h4>
+                    <a href="logout.php">Déconnexion</a>
                 </div>
                 <nav class="navbar-sidebar2">
                     <ul class="list-unstyled navbar__list">

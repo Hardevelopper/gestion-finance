@@ -1,3 +1,58 @@
+<?php
+
+@include'config_db.php';
+session_start();
+
+if(isset($_POST['submit'])){
+
+    $email = strtolower($_POST['email']);
+    $email = filter_var($email, FILTER_SANITIZE_EMAIL);
+    $pass = md5($_POST['pass']);
+    $pass = filter_var($pass, FILTER_SANITIZE_STRING);
+
+    $select = $conn->prepare("SELECT * FROM users 
+                            WHERE(email = ? && password = ?)");
+
+    $select->execute([$email, $pass]);
+
+    $rowCount = $select->rowCount();
+
+    if(!empty($email) && !empty($pass)){
+
+        if($rowCount > 0){
+
+            $fetch_users = $select->fetch(PDO::FETCH_ASSOC);
+            $_SESSION['user_role'] = $fetch_users['user_role'];
+
+            if($_SESSION['user_role'] === 'dev'){
+
+                $_SESSION['id'] = $fetch_users['id'];
+                header("Location: dashboard_dev.php");
+
+            }elseif($_SESSION['user_role'] === 'admin'){
+
+                $_SESSION['id'] = $fetch_users['id'];
+                header("Location: dashboard_admin.php");
+
+            }elseif($_SESSION['user_role'] === 'user'){
+
+                $_SESSION['id'] = $fetch_users['id'];
+                header("Location: user_page.php");
+            }
+        }else{
+
+            $message[] = "E-mail ou mot de passe incorrete";
+        }
+    }else{
+
+        $message[] = "All input are required";
+    }
+
+};
+
+
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -8,6 +63,7 @@
     <meta name="description" content="au theme template">
     <meta name="author" content="Hau Nguyen">
     <meta name="keywords" content="au theme template">
+    <link rel="shortcut icon" href="images/head.png">
 
     <!-- Title Page-->
     <title>Login</title>
@@ -42,29 +98,39 @@
                 <div class="login-wrap">
                     <div class="login-content">
                         <div class="login-logo">
-                            <a href="#">
-                                <img src="images/icon/logo.png" alt="CoolAdmin">
-                            </a>
+                            <h2>Gestion finance</h2>
                         </div>
+
+                        <?php
+                        
+                        if(isset($message)){
+
+                            foreach($message as $message){
+
+                                echo '<div class="message">'. $message .'</div>';
+                            }
+                        }
+                        
+                        ?>
                         <div class="login-form">
-                            <form action="" method="post">
+                            <form method="post">
                                 <div class="form-group">
                                     <label>E-mail</label>
                                     <input class="au-input au-input--full" type="email" name="email" placeholder="E-mail">
                                 </div>
                                 <div class="form-group">
                                     <label>Mot de passe</label>
-                                    <input class="au-input au-input--full" type="password" name="password" placeholder="Mot de passe">
+                                    <input class="au-input au-input--full" type="password" name="pass" placeholder="Mot de passe">
                                 </div>
                                 <div class="login-checkbox">
                                     <label>
                                         <input type="checkbox" name="remember">Se souvenire
                                     </label>
                                     <label>
-                                        <a href="forget-pass.php">Mot de passe oublier?</a>
+                                        <a href="">Mot de passe oublier?</a>
                                     </label>
                                 </div>
-                                <button class="au-btn au-btn--block au-btn--green m-b-20" type="submit">Inscription</button>
+                                <button class="au-btn au-btn--block au-btn--green m-b-20" type="submit" name="submit">Inscription</button>
                             </form>
                             <div class="register-link">
                                 <p>
